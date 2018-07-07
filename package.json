@@ -1,7 +1,7 @@
 {
-  "name": "nomad-total-command-om",
+  "name": "typestack",
   "version": "1.0.0",
-  "description": "Nomad Total Command Operations Center gives Nomad Support Engineers the ability to oversee operations throughout the entire NTC fleet.",
+  "description": "A starter template for fullstack TypeScript development.",
   "main": "./build/index.js",
   "scripts": {
     "build": "tsc",
