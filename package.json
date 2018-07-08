@@ -2,13 +2,14 @@
   "name": "typestack",
   "version": "1.0.0",
   "description": "A starter template for fullstack TypeScript development.",
-  "main": "./build/index.js",
+  "main": "./build/server/index.js",
   "scripts": {
     "build": "tsc",
     "build-clean": "rm -r build && tsc",
     "install-all": "npm install && cd ./client && npm install",
+    "generate-definitions": "dts-generator --name typeforge --project './utils/typings' --out './utils/typings/core-definitions.d.ts'",
     "test": "concurrently -k -p \"[{name}]\" -n \"Redis,Mocha\" -c \"yellow.bold,green.bold\" \"redis-server\" \"nyc mocha -r ts-node/register server/**/*.spec.ts\"",
-    "start": "concurrently -k -p \"[{name}]\" -n \"Redis,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"redis-server\" \"tsc -w\" \"nodemon --delay 3 build/index.js\""
+    "start": "concurrently -k -p \"[{name}]\" -n \"Redis,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"redis-server\" \"rm -r build && tsc -w\" \"wait-on ./build/server/index.js && nodemon\""
   },
   "author": "Josh Rathke",
   "license": "MIT",
@@ -34,6 +35,7 @@
     "@types/socket.io-redis": "^1.0.25",
     "chai": "^4.1.2",
     "concurrently": "^3.6.0",
+    "dts-generator": "^2.1.0",
     "mocha": "^5.2.0",
     "morgan": "^1.9.0",
     "nodemon": "^1.17.5",
@@ -43,7 +45,8 @@
     "source-map-support": "^0.5.6",
     "ts-node": "^7.0.0",
     "typeorm": "^0.2.7",
-    "typescript": "^2.9.2"
+    "typescript": "^2.9.2",
+    "wait-on": "^2.1.0"
   },
   "nyc": {
     "extension": [

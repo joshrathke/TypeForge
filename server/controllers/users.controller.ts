@@ -22,5 +22,9 @@ export class UsersController {
      */
     getUser = async (req: Request, res: Response, next: NextFunction) => {
 
-    }
+	}
+	
+	putUser = async (req: Request, res: Response, next: NextFunction) => {
+		
+	}
 }

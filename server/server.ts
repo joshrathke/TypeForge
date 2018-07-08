@@ -48,6 +48,8 @@ export class Server {
         this.HTTPServer = this.Express.listen(serverPort, () => {
             console.log(`Process: ${process.pid} Listening on Port ${serverPort}`);
         })
+        // Define Http Server Error Behavior
+        this.HTTPServer.on('error', this.HTTPServerErrorHandler);
         // Bind a Socket.IO Websocket Server to the existing HTTPServer
         this.WebsocketServer = socketIO(this.HTTPServer);
         // Bind the Socket.IO Server to the Redis Adapter for continuity between instances
@@ -80,6 +82,14 @@ export class Server {
         // Serve the Angular Application
 		this.Express.use(express.static(path.join(__dirname, './client')));
 		this.Express.use('*', (req: Request, res: Response) => res.sendFile(path.join(__dirname, './client/index.html')));
+    }
+
+    /**
+     * 
+     */
+    public HTTPServerErrorHandler(error: Error) {
+        console.log(error);
+        process.exit(1);
     }
 
     /**
