@@ -1,3 +1,5 @@
+import "reflect-metadata";
+import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
@@ -39,8 +41,10 @@ export class Server {
     public initServer = async (): Promise<void> => {
         // Initialize the DB Connection
         await this.initDBConnection();
-        // Instantiate the Express Application with Cors
+        // Instantiate the Express Application with Cors and Body Parser
         this.Express = express().use(cors());
+        this.Express.use(bodyParser.json());
+		this.Express.use(bodyParser.urlencoded({ extended: true }));
 
         // Get the Server Port to listen on.
         let serverPort = this.getServerPort();
