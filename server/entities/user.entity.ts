@@ -1,35 +1,35 @@
-import { Entity, PrimaryGeneratedColumn, VersionColumn, CreateDateColumn, UpdateDateColumn, Column } from "typeorm";
-import { IsEmail, IsMobilePhone } from 'class-validator';
+import { IsEmail, IsMobilePhone } from "class-validator";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 
 @Entity("Users")
 export class User {
 
     @PrimaryGeneratedColumn("uuid")
-    userID: string;
+    public userID: string;
 
-    @Column({ type: 'varchar', length: 255 })
-    username: string;
+    @Column({ type: "varchar", length: 255 })
+    public username: string;
 
-    @Column({ type: 'varchar', length: 255 })
-    userFirstName: string;
+    @Column({ type: "varchar", length: 255 })
+    public userFirstName: string;
 
-    @Column({ type: 'varchar', length: 255 })
-    userLastName: string;
+    @Column({ type: "varchar", length: 255 })
+    public userLastName: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: "varchar", length: 255 })
     @IsEmail()
-    userEmail: string;
+    public userEmail: string;
 
-    @Column({ type: 'varchar', length: 255 })
-    @IsMobilePhone('en-Us')
-    userPhone: string;
+    @Column({ type: "varchar", length: 255 })
+    @IsMobilePhone("en-Us")
+    public userPhone: string;
 
     @CreateDateColumn()
-    createdAt: string;
+    public createdAt: string;
 
     @UpdateDateColumn()
-    updatedAt: string;
+    public updatedAt: string;
 
     @VersionColumn()
-    version: number;
+    public version: number;
 }

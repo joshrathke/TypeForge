@@ -1,6 +1,10 @@
-import { Routes } from '@angular/router';
+import { Routes, RouterModule } from '@angular/router';
+import { ModuleWithProviders } from '@angular/core';
 
-const Routes: Routes = [
+const AppRoutes: Routes = [
     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-    // { path: 'auth', loadChildren: './auth/auth.module#AuthModule', canDeactivate: isAuthenticatedGuard }
-]
+    { path: 'gateway', loadChildren: './gateway/gateway.module#GatewayModule', /* canDeactivate: isAuthenticatedGuard */ }
+];
+
+// Export The App Routing Module
+export const AppRouting: ModuleWithProviders = RouterModule.forRoot(AppRoutes);
