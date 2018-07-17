@@ -7,8 +7,7 @@
     "build": "webpack",
     "build-clean": "rm -r build && tsc",
     "install-all": "npm install && cd ./client && npm install",
-    "generate-definitions": "dts-generator --name typeforge --project ./utils/typings --out ./utils/typings/core-definitions.d.ts",
-    "test": "concurrently -k -p \"[{name}]\" -n \"Redis,Mocha\" -c \"yellow.bold,green.bold\" \"redis-server\" \"nyc mocha -r ts-node/register server/**/*.spec.ts\"",
+    "test": "concurrently -k -p \"[{name}]\" -n \"Redis,Mocha\" -c \"yellow.bold,green.bold\" \"nyc mocha -r ts-node/register server/**/*.spec.ts\"",
     "start": "concurrently -k -p \"[{name}]\" -n \"Webpack,Node\" -c \"yellow.bold,green.bold\" \"webpack -w\" \"wait-on ./build/server/index.js && nodemon\""
   },
   "author": "Josh Rathke",
@@ -37,7 +36,6 @@
     "@types/socket.io-redis": "^1.0.25",
     "chai": "^4.1.2",
     "concurrently": "^3.6.0",
-    "dts-generator": "^2.1.0",
     "mocha": "^5.2.0",
     "morgan": "^1.9.0",
     "nodemon": "^1.17.5",

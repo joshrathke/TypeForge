@@ -10,7 +10,6 @@ import "reflect-metadata";
 import socketIO from "socket.io";
 import redisAdapter from "socket.io-redis";
 import { Connection, createConnection } from "typeorm";
-import { ForgeConfig } from "../utils/typings/forge-config";
 import { AuthenticationRouter } from "./routes/authentication.router";
 
 /**
@@ -23,7 +22,7 @@ export class Server {
     // Initialize Express Property
     public Express: express.Application;
     // Initialize Forge Config Property
-    public forgeConfig: ForgeConfig;
+    public forgeConfig: any;
     // Initialize the HTTP Server Property
     public HTTPServer: http.Server;
     // Initialize the Websocket Socket Server Property
