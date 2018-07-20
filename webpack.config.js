@@ -12,6 +12,7 @@ fs.readdirSync('node_modules')
 
 module.exports = {
     entry: './server/index.ts',
+    mode: 'production',
     output: {
         filename: 'index.js',
         path: path.resolve(__dirname, './build/server')
@@ -22,7 +23,7 @@ module.exports = {
     },
     module: {
         rules: [
-            { test: /\.ts$/, enforce: 'pre', loader: 'tslint-loader' },
+            //{ test: /\.ts$/, enforce: 'pre', loader: 'tslint-loader', options: { fix: true } },
             { test: /\.ts$/, loader: 'ts-loader' }
         ]
     },

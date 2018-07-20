@@ -18,5 +18,5 @@ if (cluster.isMaster) {
 // Worker Scripts
 } else {
     // Instantiate Server Instance
-    const server = new Server();
+    const server = new Server().bootstrap();
 }

@@ -1,23 +1,53 @@
-import { expect } from "chai";
+import fs from "fs";
 import sinon from "sinon";
+
+import { expect } from "chai";
 import { Server } from "./server.class";
+import { ForgeEnvironment, ForgeConfig } from "../utils/typings/typeforge";
 
-describe("Server Initialization", () => {
-    let _Server: Server;
+describe("Server", () => {
+    let server: Server;
 
-    beforeEach(() => {
-        _Server = new Server();
-    });
+    let serverFactory = (ENVIRONMENT: ForgeEnvironment = "testing") => {
+        return new Server(ENVIRONMENT);
+    };
 
-    afterEach((done) => {
-        _Server.HTTPServer.close();
-        setTimeout(done, 1000);
+    describe("constructor()", () => {
+
+        afterEach((done) => {
+            server.HTTPServer.close();
+            setTimeout(done, 1000);
+        })
+
+        it ("Should get and set the ForgeConfig property if the forgeconfig.json file exists.", () => {
+            sinon.stub(fs, "readFileSync").onCall(0).returns(JSON.stringify({ "multithreading": false }));
+            server = serverFactory();
+            server.bootstrap();
+            expect(server.ForgeConfig.multithreading).to.equal(false);
+        })
+
+        it ("Should set the ForgeConfig property as an empty object if the forgeconfig.json file is not found.", () => {
+            sinon.stub(fs, "readFileSync").onCall(0).returns(undefined);
+            server = serverFactory();
+            server.bootstrap();
+            expect(server.ForgeConfig).to.deep.equal({});
+        })
     });
 
     describe("initServer()", () => {
 
+        before(() => {
+            server = serverFactory()
+            server.bootstrap();
+        });
+
+        after((done) => {
+            server.HTTPServer.close();
+            setTimeout(done, 1000);
+        })
+
         it ("Should instantiate the Server Class.", () => {
-            expect(_Server).to.be.an.instanceOf(Server);
+            expect(server).to.be.an.instanceOf(Server);
         });
 
         // it ('Should create a connection to the database.', () => {
@@ -25,65 +55,84 @@ describe("Server Initialization", () => {
         // })
 
         it ("Should instantiate the Express Application.", () => {
-            expect(_Server.Express).to.not.be.undefined;
+            expect(server.Express).to.not.be.undefined;
         });
 
         it ("Should instantiate the HTTP Server.", () => {
-            expect(_Server.HTTPServer).to.not.be.undefined;
+            expect(server.HTTPServer).to.not.be.undefined;
         });
 
         it ("Should instantiate the Websocket Server.", () => {
-            expect(_Server.WebsocketServer).to.not.be.undefined;
+            expect(server.WebsocketServer).to.not.be.undefined;
         });
     });
 
     describe("initEnvironment()", () => {
-        it ("Should install the Client Default Route if in Production mode.", () => {
-            const initAppServer = sinon.spy(_Server, "initAppServer");
-            process.env.NODE_ENV = "production";
-            _Server.initEnvironment();
-            sinon.assert.called(initAppServer);
+
+        afterEach((done) => {
+            server.HTTPServer.close();
+            setTimeout(done, 1000);
+        })
+
+        it ("Should install the Client Default Route if in Production mode.", async () => {
+            server = serverFactory("production");
+            const initAppServerSpy = sinon.spy(server, "initAppServer");
+            await server.bootstrap();
+            sinon.assert.calledOnce(initAppServerSpy);
         });
 
-        // It should not install the Client Default Route if in Development Mode
-
-        it ("Should invoke the getTokenSecret() method with devMode undefined when NODE_ENV environment variable is set to 'production'.", () => {
-            const getTokenSecret = sinon.spy(_Server, "getTokenSecret");
-            process.env.NODE_ENV = "production";
-            _Server.initEnvironment();
-            sinon.assert.calledOnce(getTokenSecret);
+        it ("Should invoke the getTokenSecret() method with devMode undefined when NODE_ENV environment variable is set to 'production'.", async () => {
+            server = serverFactory("production");
+            const getTokenSecretSpy = sinon.spy(server, "getTokenSecret");
+            await server.bootstrap();
+            sinon.assert.calledOnce(getTokenSecretSpy);
         });
 
-        it ("Should invoke the getTokenSecret() method with devMode set to true when NODE_ENV environment variable is undefined.", () => {
-            const getTokenSecret = sinon.spy(_Server, "getTokenSecret").withArgs(true);
-            process.env.NODE_ENV = undefined;
-            _Server.initEnvironment();
-            sinon.assert.calledOnce(getTokenSecret);
+        it ("Should invoke the getTokenSecret() method with devMode set to true when NODE_ENV environment variable is not set to 'production'.", async () => {
+            server = serverFactory("testing");
+            const getTokenSecretSpy = sinon.spy(server, "getTokenSecret");
+            await server.bootstrap();
+            sinon.assert.calledOnce(getTokenSecretSpy.withArgs(true));
         });
     });
 
     describe("getTokenSecret()", () => {
+
+        before(() => {
+            server = serverFactory()
+            server.bootstrap();
+        });
+
+        after((done) => {
+            server.HTTPServer.close();
+            setTimeout(done, 1000);
+        })
+
         it ("Should generate a string representation for the Token Secret.", () => {
-            expect(_Server.getTokenSecret()).to.be.string;
+            expect(server.getTokenSecret()).to.be.string;
         });
 
         it ("Should generate a strong 256 character token secret when in Production mode.", () => {
-            expect(_Server.getTokenSecret().length).to.equal(256);
+            expect(server.getTokenSecret().length).to.equal(256);
         });
 
         it ('Should generate a token secret equal to "secret" when in Development mode.', () => {
-            expect(_Server.getTokenSecret(true)).to.equal("secret");
+            expect(server.getTokenSecret(true)).to.equal("secret");
         });
     });
 
     describe("getServerPort()", () => {
-        it ("Should use port 3001 to setup the HTTP Server if no port environment variable is set", () => {
-            expect(_Server.getServerPort()).to.equal(3001);
+
+        before(() => server = serverFactory());
+
+        it ("Should use port 3001 to setup the HTTP Server if no port environment is set in the TypeForge configuration file.", () => {
+            server.ForgeConfig.APIPort = undefined;
+            expect(server.getServerPort()).to.equal(3001);
         });
 
         it ("Should us the port provided if port is set in the process environment variables.", async () => {
-            process.env.PORT = "3010";
-            expect(_Server.getServerPort()).to.equal(3010);
+            server.ForgeConfig.APIPort = 3010;
+            expect(server.getServerPort()).to.equal(3010);
         });
     });
 });

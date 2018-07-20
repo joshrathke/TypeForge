@@ -10,7 +10,9 @@ import "reflect-metadata";
 import socketIO from "socket.io";
 import redisAdapter from "socket.io-redis";
 import { Connection, createConnection } from "typeorm";
+import { ForgeConfig, ForgeEnvironment } from "../utils/typings/typeforge";
 import { AuthenticationRouter } from "./routes/authentication.router";
+import { ClientApplicationRouter } from "./routes/client-application.router";
 
 /**
  * Main Server Class of the entire project. In production, this should be serving the
@@ -22,15 +24,22 @@ export class Server {
     // Initialize Express Property
     public Express: express.Application;
     // Initialize Forge Config Property
-    public forgeConfig: any;
+    public ForgeConfig: ForgeConfig;
     // Initialize the HTTP Server Property
     public HTTPServer: http.Server;
     // Initialize the Websocket Socket Server Property
     public WebsocketServer: SocketIO.Server;
 
-    constructor() {
-        // Initialize the Server
-        this.initServer().then(() => this.initEnvironment());
+    constructor(
+        public ENVIRONMENT: ForgeEnvironment = <ForgeEnvironment>process.env.NODE_ENV || "development"
+    ) {
+        // Get and Parse the Forge Config File
+        this.ForgeConfig = JSON.parse(fs.readFileSync("forgeconfig.json", "utf8")) || {};
+    }
+
+    public bootstrap = async (): Promise<void> => {
+        await this.initServer();
+        await this.initEnvironment();
     }
 
     public initDBConnection = async (): Promise<void> => {
@@ -41,9 +50,7 @@ export class Server {
     /**
      * Initializes the Connection to the SQL Database and Instiates the Express Server.
      */
-    public initServer = async (): Promise<void> => {
-        // Get and Parse the Forge Config File
-        this.forgeConfig = JSON.parse(fs.readFileSync("forgeconfig.json", "utf8"));
+    private initServer = async (): Promise<void> => {
         // Initialize the DB Connection
         await this.initDBConnection();
         // Instantiate the Express Application with Cors and Body Parser
@@ -57,15 +64,13 @@ export class Server {
         // Get the Server Port to listen on.
         const serverPort = this.getServerPort();
         // Start the HTTP Server and setup Express Listener
-        this.HTTPServer = this.Express.listen(serverPort, () => {
-            console.log(`Process: ${process.pid} Listening on Port ${serverPort}`);
-        });
+        this.HTTPServer = this.Express.listen(serverPort);
         // Define Http Server Error Behavior
         this.HTTPServer.on("error", this.HTTPServerErrorHandler);
         // Bind a Socket.IO Websocket Server to the existing HTTPServer
         this.WebsocketServer = socketIO(this.HTTPServer);
         // Bind the Socket.IO Server to the Redis Adapter for continuity between instances
-        if (this.forgeConfig && this.forgeConfig.multithreading) {
+        if (this.ForgeConfig && this.ForgeConfig.multithreading) {
             this.WebsocketServer.adapter(redisAdapter({ host: "localhost", port: 6379 }));
         }
     }
@@ -73,19 +78,26 @@ export class Server {
     /**
      * Run Post Server Initialization processes.
      */
-    public initEnvironment = async (): Promise<void> => {
+    private initEnvironment = async (): Promise<void> => {
         // Run Environment specific tasks
-        if (process.env.NODE_ENV === "production") {
+        if (this.ENVIRONMENT === "production") {
             // If Production generate a random 256 Character Token Secret used to Encrypt Tokens.
             this.Express.set("tokenSecret", this.getTokenSecret());
-            // If Production serve the bundled application from the 'build' directory.
-            // If active development is taking place, the Angular Development Server should be used.
+            /*
+             * If Production serve the bundled application from the 'build' directory.
+             * If active development is taking place, the Angular Development Server should be used.
+             */
             this.initAppServer();
+
 		} else {
             // Generate Development Token Secret so Tokens survive Application Rebuilds
             this.Express.set("tokenSecret", this.getTokenSecret(true));
-            // Log HTTP Server Requests to the console
-            this.Express.use(morgan("dev"));
+
+            // If Development Mode, Log HTTP Server Requests to the console
+            if (this.ENVIRONMENT === "development") {
+                console.log(`Process: ${process.pid} Listening on Port ${this.getServerPort()}`);
+                this.Express.use(morgan("dev"));
+            }
         }
     }
 
@@ -99,8 +111,8 @@ export class Server {
      */
     public initAppServer() {
         // Serve the Angular Application
-		this.Express.use(express.static(path.join(__dirname, "./client")));
-		this.Express.use("*", (req: Request, res: Response) => res.sendFile(path.join(__dirname, "./client/index.html")));
+		this.Express.use(express.static(path.resolve("build/client")));
+		this.Express.use("*", new ClientApplicationRouter().Router);
     }
 
     /**
@@ -116,7 +128,7 @@ export class Server {
      * @returns {number} The port number to listen on.
      */
     public getServerPort(): number {
-        return parseInt(process.env.PORT) || 3001;
+        return this.ForgeConfig.APIPort || 3001;
     }
 
     /**
