@@ -6,7 +6,7 @@ The goal of TypeForge is to hit the ground running. We have attempted to do as m
 
 # Installation
 #### Install Redis
-In order to utilize a multi-threaded environment, TypeForge instantiates a server on every thread of the host CPU. This improves speed very slightly, but greatly decreases the risk of a request taking a long time due to the request in front of it waiting for output. Redis gives websockets a central location to report to so that all pub/sub events still occur regardless of the specific thread any given transmission is taking place on.
+In order to utilize a multi-threaded environment, TypeForge instantiates a server on every thread of the host CPU. This improves speed slightly, but greatly decreases the risk of a request taking a long time due to the request in front of it waiting for output. Redis gives websockets a central location to report to so that all pub/sub events still occur regardless of the specific thread any given transmission is taking place on.
 ```bash
 brew install redis
 ```
