@@ -10,12 +10,12 @@
         "outDir": "build/server",
         "baseUrl": ".",
         "paths": {
-            "@TypeForge/*": ["./utils/typings/*"]
+            "@TypeForge/*": ["./utilities/typings/*"]
         }
     },
     "include": [
         "server/**/*",
-        "utils/typings/**/*"
+        "utilities/typings/**/*"
     ],
     "exclude": [
         "server/**/*.spec.ts"

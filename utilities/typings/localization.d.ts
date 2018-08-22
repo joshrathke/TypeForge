@@ -1,0 +1,1 @@
+export type Locale = 'en-us' | 'es-mx';

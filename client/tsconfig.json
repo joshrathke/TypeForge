@@ -10,7 +10,7 @@
     "experimentalDecorators": true,
     "target": "es5",
     "paths": {
-      "@TypeForge/*": ["../utils/typings/*"]
+      "@TypeForge/*": ["../utilities/typings/*"]
     },
     "lib": [
       "es2017",
