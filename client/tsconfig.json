@@ -9,9 +9,9 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "es5",
-    "typeRoots": [
-      "node_modules/@types"
-    ],
+    "paths": {
+      "@TypeForge/*": ["../utils/typings/*"]
+    },
     "lib": [
       "es2017",
       "dom"

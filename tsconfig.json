@@ -10,9 +10,7 @@
         "outDir": "build/server",
         "baseUrl": ".",
         "paths": {
-            "*": [
-                "node_modules/*"
-            ]
+            "@TypeForge/*": ["./utils/typings/*"]
         }
     },
     "include": [

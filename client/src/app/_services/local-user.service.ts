@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 
 export interface LocalUserObject {
-	username: string,
-	userID: string,
-	token: string
+	username: string;
+	userID: string;
+	token: string;
 }
 
 @Injectable()

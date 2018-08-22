@@ -1,3 +1,5 @@
+import { ForgeConfig, ForgeEnvironment } from "@TypeForge/typeforge";
+import * as _ from "lodash";
 import bodyParser from "body-parser";
 import cors from "cors";
 import express, { Request, Response, Router } from "express";
@@ -10,7 +12,6 @@ import "reflect-metadata";
 import socketIO from "socket.io";
 import redisAdapter from "socket.io-redis";
 import { Connection, createConnection } from "typeorm";
-import { ForgeConfig, ForgeEnvironment } from "../utils/typings/typeforge";
 import { AuthenticationRouter } from "./routes/authentication.router";
 import { ClientApplicationRouter } from "./routes/client-application.router";
 
@@ -31,10 +32,15 @@ export class Server {
     public WebsocketServer: SocketIO.Server;
 
     constructor(
-        public ENVIRONMENT: ForgeEnvironment = <ForgeEnvironment>process.env.NODE_ENV || "development"
+        public ENVIRONMENT: ForgeEnvironment = process.env.NODE_ENV as ForgeEnvironment || "development",
     ) {
         // Get and Parse the Forge Config File
-        this.ForgeConfig = JSON.parse(fs.readFileSync("forgeconfig.json", "utf8")) || {};
+        this.ForgeConfig = this.getForgeConfig();
+    }
+
+    private getForgeConfig() {
+        let forgeConfig = fs.readFileSync("forgeconfig.json", "utf8");
+        return forgeConfig ? JSON.parse(forgeConfig) : {};
     }
 
     public bootstrap = async (): Promise<void> => {
@@ -47,8 +53,56 @@ export class Server {
         // this.DBConnection = await createConnection();
     }
 
+    public initRouter() {
+        const Router: Router = express.Router();
+        this.Express.use("/api/v1/authentication", new AuthenticationRouter().Router);
+    }
+
     /**
-     * Initializes the Connection to the SQL Database and Instiates the Express Server.
+     * Initialize the Application server for the Angular Application
+     */
+    public initAppServer() {
+        // Serve the Angular Application
+        this.Express.use(express.static(path.resolve("build/client")));
+        this.Express.use("*", new ClientApplicationRouter().Router);
+    }
+
+    /**
+     *
+     */
+    public HTTPServerErrorHandler(error: Error) {
+        console.log(error);
+        process.exit(1);
+    }
+
+    /**
+     * Get the Server Port used to setup the HTTP Server
+     *
+     * If in production mode the server will use the provided port, if one has been provided.
+     * Otherwise, the server will use port 3001. This should not be overridden as it is hardcoded into
+     * the client's ServiceTargetsService as the development mode default.
+     *
+     * The reason we do this is because Angular's development port is set to 4200 by default, which is
+     * different than the Server's listening port. The client's ServiceTargetsService uses the port in the url of the
+     * window to derive the location of the API. So in Development mode, we need to have something statically defined.
+     *
+     * @returns {number} The port number to listen on.
+     */
+    public getServerPort(): number {
+        return this.ENVIRONMENT === "production" ? _.get(this.ForgeConfig, ["APIPort"], undefined) || 3001 : 3001;
+    }
+
+    /**
+     * Generate the Token Secret used for encrypting JSON WebTokens.
+     * @param {boolean} devMode Indicates whether or not the current build is in development mode.
+     * @returns {string} String representation of the Token Secret.
+     */
+    public getTokenSecret(devMode: boolean = false): string {
+        return devMode ? "secret" : passwordGenerator(256, false);
+    }
+
+    /**
+     * Initializes the Connection to the SQL Database and Instantiates the Express Server.
      */
     private initServer = async (): Promise<void> => {
         // Initialize the DB Connection
@@ -67,7 +121,7 @@ export class Server {
         this.HTTPServer = this.Express.listen(serverPort);
         // Define Http Server Error Behavior
         this.HTTPServer.on("error", this.HTTPServerErrorHandler);
-        // Bind a Socket.IO Websocket Server to the existing HTTPServer
+        // Bind a Socket.IO WebSocket Server to the existing HTTPServer
         this.WebsocketServer = socketIO(this.HTTPServer);
         // Bind the Socket.IO Server to the Redis Adapter for continuity between instances
         if (this.ForgeConfig && this.ForgeConfig.multithreading) {
@@ -89,7 +143,7 @@ export class Server {
              */
             this.initAppServer();
 
-		} else {
+        } else {
             // Generate Development Token Secret so Tokens survive Application Rebuilds
             this.Express.set("tokenSecret", this.getTokenSecret(true));
 
@@ -99,44 +153,5 @@ export class Server {
                 this.Express.use(morgan("dev"));
             }
         }
-    }
-
-    public initRouter() {
-        const Router: Router = express.Router();
-        this.Express.use("/api/v1/authentication", new AuthenticationRouter().Router);
-    }
-
-    /**
-     * Initialize the Application server for the Angular Applicaiton
-     */
-    public initAppServer() {
-        // Serve the Angular Application
-		this.Express.use(express.static(path.resolve("build/client")));
-		this.Express.use("*", new ClientApplicationRouter().Router);
-    }
-
-    /**
-     *
-     */
-    public HTTPServerErrorHandler(error: Error) {
-        console.log(error);
-        process.exit(1);
-    }
-
-    /**
-     * Get the Server Port used to setup the HTTP Server
-     * @returns {number} The port number to listen on.
-     */
-    public getServerPort(): number {
-        return this.ForgeConfig.APIPort || 3001;
-    }
-
-    /**
-     * Generate the Token Secret used for encrypting JSON Webtokens.
-     * @param {boolean} devMode Indicates whether or not the current build is in development mode.
-     * @returns {string} String representation of the Token Secret.
-     */
-    public getTokenSecret(devMode: boolean = false): string {
-        return devMode ? "secret" : passwordGenerator(256, false);
-    }
+    };
 }

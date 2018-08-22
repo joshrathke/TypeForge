@@ -1,14 +1,14 @@
 import fs from "fs";
 import sinon from "sinon";
-
 import { expect } from "chai";
 import { Server } from "./server.class";
-import { ForgeEnvironment, ForgeConfig } from "../utils/typings/typeforge";
+import { ForgeEnvironment, ForgeConfig } from "@TypeForge/typeforge";
 
 describe("Server", () => {
     let server: Server;
+    let forgeConfigStub: sinon.SinonStub;
 
-    let serverFactory = (ENVIRONMENT: ForgeEnvironment = "testing") => {
+    const serverFactory = (ENVIRONMENT: ForgeEnvironment = "testing") => {
         return new Server(ENVIRONMENT);
     };
 
@@ -16,18 +16,19 @@ describe("Server", () => {
 
         afterEach((done) => {
             server.HTTPServer.close();
+            forgeConfigStub.restore();
             setTimeout(done, 1000);
         })
 
         it ("Should get and set the ForgeConfig property if the forgeconfig.json file exists.", () => {
-            sinon.stub(fs, "readFileSync").onCall(0).returns(JSON.stringify({ "multithreading": false }));
+            forgeConfigStub = sinon.stub(fs, "readFileSync").onCall(0).returns(JSON.stringify({ "multithreading": false }));
             server = serverFactory();
             server.bootstrap();
             expect(server.ForgeConfig.multithreading).to.equal(false);
         })
 
         it ("Should set the ForgeConfig property as an empty object if the forgeconfig.json file is not found.", () => {
-            sinon.stub(fs, "readFileSync").onCall(0).returns(undefined);
+            forgeConfigStub = sinon.stub(fs, "readFileSync").onCall(0).returns(undefined);
             server = serverFactory();
             server.bootstrap();
             expect(server.ForgeConfig).to.deep.equal({});
@@ -37,14 +38,14 @@ describe("Server", () => {
     describe("initServer()", () => {
 
         before(() => {
-            server = serverFactory()
+            server = serverFactory();
             server.bootstrap();
         });
 
         after((done) => {
             server.HTTPServer.close();
             setTimeout(done, 1000);
-        })
+        });
 
         it ("Should instantiate the Server Class.", () => {
             expect(server).to.be.an.instanceOf(Server);
@@ -125,14 +126,22 @@ describe("Server", () => {
 
         before(() => server = serverFactory());
 
-        it ("Should use port 3001 to setup the HTTP Server if no port environment is set in the TypeForge configuration file.", () => {
+        it ("Should use port 3001 to setup the HTTP Server if no port environment is set in forgeconfig.json and the ENVIRONMENT is set to 'production'..", () => {
+            server.ENVIRONMENT = 'production';
             server.ForgeConfig.APIPort = undefined;
             expect(server.getServerPort()).to.equal(3001);
         });
 
-        it ("Should us the port provided if port is set in the process environment variables.", async () => {
+        it ("Should use the port provided in forgeonfig.json if port is set in the process environment variables and the ENVIRONMENT is set to 'production'.", async () => {
+            server.ENVIRONMENT = 'production';
             server.ForgeConfig.APIPort = 3010;
             expect(server.getServerPort()).to.equal(3010);
+        });
+
+        it ("Should use port 3001 if the ENVIRONMENT is set to anything but 'production'.", () => {
+            server.ENVIRONMENT = 'development';
+            server.ForgeConfig.APIPort = 3010;
+            expect(server.getServerPort()).to.equal(3001);
         });
     });
 });

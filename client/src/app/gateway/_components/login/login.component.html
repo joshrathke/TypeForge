@@ -3,14 +3,20 @@
 
   <mat-card-title>Gateway</mat-card-title>
 
-  <div fxLayout="row" fxLayoutGap="24px" fxLayout.lt-sm="column">
-    <mat-form-field fxFlex="50" class="username-field">
-      <input matInput placeholder="Username">
-    </mat-form-field>
-    
-    <mat-form-field fxFlex="50" class="password-field">
-      <input matInput type="password" placeholder="Password">
-    </mat-form-field>
-  </div>
+  <form *ngIf="loginForm" [formGroup]="loginForm">
+    <div fxLayout="row" fxLayoutGap="24px" fxLayout.lt-sm="column">
+      <mat-form-field fxFlex="50" class="username-field">
+        <input matInput placeholder="Username" formControlName="username">
+      </mat-form-field>
+
+      <mat-form-field fxFlex="50" class="password-field">
+        <input matInput type="password" placeholder="Password" formControlName="password">
+      </mat-form-field>
+    </div>
+    <button mat-flat-button>Login</button>
+
+    {{ loginForm.value | json }}
+
+  </form>
 </mat-card>
 </div>
