@@ -1,15 +1,15 @@
 jobs:
   include:
-      - stage: "Server"
+      - stage: server
         language: node_js
-        node_js: 8,
+        node_js: "8"
         before_script:
           - npm install
-      script:
-        - npm test
-      - stage: "Client"
+        script:
+          - npm test
+      - stage: client
         language: node_js
-        node_js: 8
+        node_js: "8"
         before_script:
           - cd client
           - npm install
