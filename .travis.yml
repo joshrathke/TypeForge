@@ -1,8 +1,25 @@
-{
-  "language": "node_js",
-  "node_js": "8",
-  "script": [
-    "npm install",
-    "npm test"
+jobs: {
+  include: [
+    {
+      "language": "node_js",
+      "node_js": "8",
+      "before_script": [
+        "npm install"
+      ],
+      "script": [
+        "npm test"
+      ]
+    }
+    {
+      "language": "node_js",
+      "node_js": "8",
+      "before_script": [
+        "cd client",
+        "npm install"
+      ],
+      "script": [
+        "ng test"
+      ]
+    }
   ]
 }
