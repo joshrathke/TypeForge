@@ -12,8 +12,8 @@ import "reflect-metadata";
 import socketIO from "socket.io";
 import redisAdapter from "socket.io-redis";
 import { Connection, createConnection } from "typeorm";
-import { AuthenticationRouter } from "./routes/authentication.router";
-import { ClientApplicationRouter } from "./routes/client-application.router";
+import { AuthenticationRouter } from "./routers/authentication.router";
+import { ClientApplicationRouter } from "./routers/client-application.router";
 
 /**
  * Main Server Class of the entire project. In production, this should be serving the
