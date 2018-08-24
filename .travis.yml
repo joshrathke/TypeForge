@@ -1,6 +1,7 @@
 jobs:
   include:
       - stage: server
+        name: "Server (Express)"
         language: node_js
         node_js: "8"
         before_script:
@@ -8,6 +9,7 @@ jobs:
         script:
           - npm test
       - stage: client
+        name: "Client (Angular)"
         language: node_js
         node_js: "8"
         before_script:
