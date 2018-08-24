@@ -10,6 +10,9 @@ jobs:
           - npm test
       - stage: client
         name: "Client (Angular)"
+        sudo: required
+        addons:
+              chrome: stable
         language: node_js
         node_js: "8"
         before_script:
